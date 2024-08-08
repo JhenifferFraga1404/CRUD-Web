@@ -1,0 +1,380 @@
+Classe
+namespace Aula_pra_entregar
+{
+ 
+    public class ClassClientes
+    { 
+        public int Codigo { get; set; }
+        public string Nome { get; set; }
+        public string Endereco { get; set; }
+        public string Senha { get; set; }
+        public string Email { get; set; }
+    }
+    
+}
+
+
+Cliente Controler
+
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection.Metadata.Ecma335;
+using System.Security.Cryptography.X509Certificates;
+
+namespace Aula_pra_entregar.Controllers
+{
+
+    public class ClienteController : Controller
+    {
+        [HttpPost]
+        public ActionResult CadastrarClientes(ClassClientes cliente)
+        {
+            string sql = "INSERT INTO Clientes(Nome, Email, Endereco, Senha)" +
+                " Values(@nome, @email, @denreco, @senha)";
+            SqlConnection con = new SqlConnection(constr);
+            SqlCommand cmd = new SqlCommand(sql);
+
+
+            cmd.Parameters.Add(new SqlParameter("@nome", cliente.Nome));
+            cmd.Parameters.Add(new SqlParameter("@email", cliente.Email));
+            cmd.Parameters.Add(new SqlParameter("@endereco", cliente.Endereco));
+            cmd.Parameters.Add(new SqlParameter("@senha", cliente.Senha));
+
+            cmd.Connection = con;
+            con.Open();
+            cmd.ExecuteNonQuery();
+            con.Close();
+
+            ViewBag.Cadastro = "Cadastro Realizado com Sucesso!!";
+
+
+
+            return View("CadastrarCliente");
+        }
+    }
+    public ActionResult Index()
+    {
+
+        {
+            List<clientes> clientes = new List<clientes>();
+            string constr = ConfigurationManager.ConnectionStrings["SqlConexao"].ConnectionSring;
+            string query = "SELECT * FROM Clientes";
+            using (SqlConnection con = new SqlConnection(constr))
+            {
+                using (SqlCommand cmd = new SqlCommand(query))
+                {
+                    cmd.Connection = con;
+                    con.Open();
+                    using (SqlDataReader sdr = cmd.ExecuteReader())
+                    {
+                        while (sdr.Read)
+                        {
+                            clientes.Add(new cliente)
+                                {
+                                ClienteID = Convert.ToInt32(sdr["ClienteID"]);
+                                Nome = Convert.ToString(sdr["Nome"]);
+                                Endereco = Convert.ToString(sdr["Endereco"]);
+                                Email = Convert.ToString(sdr["Email"]);
+                            };
+
+                        }
+                    }
+                    con.Close();
+                }
+            }
+            if (clientes.Count == 0)
+            {
+                clientes.Add(new Cliente));
+            }
+            return View(clientes);
+
+        }
+    }
+    public ActionResult NovoCliente()
+    {
+        return View();
+    }
+    [HttpPost]
+    public ActionResult InserirCliente(Cliente cliente)
+    {
+        string query = "INSERT INTO Clientes VALUES(@nome, @endereco, @email)";
+        query += "SELECT SCOPE_IDENTITY()";
+        string constr = string constr = ConfigurationManager.ConnectionStrings["SqlConexao"].ConnectionSring;
+        using (SqlConnection con = new SqlConnection(constr))
+        {
+            using (SqlCommand cmd = new SqlCommand(query))
+            {
+                cmd.Parameters.AddWithValue("@Nome", cliente.Nome);
+                cmd.Parameters.AddWithValue("@Endereco", cliente.Endereco);
+                cmd.Parameters.AddWithValue("@Email", cliente.Email);
+                cmd.Connection = con;
+                con.Open();
+                cliente.ClienteID = Convert.ToInt32(cmd.ExecuteScalar());
+                con.Close();
+            }
+
+        }
+        return RedirectToAction("Idnex");
+    }
+
+    public ActionResult UpdateCliente(int CliID)
+    {
+        string constr = string constr = ConfigurationManager.ConnectionStrings["SqlConexao"].ConnectionSring;
+        SqlConnection con = new SqlConnection(constr);
+        con.Open();
+        string query = "SELECT *FROM Clientes where ClienteID=@ClienteID";
+        SqlCommand cmd = new SqlCommand(query, con);
+
+        cmd.Parameters.AddWithValue("@ClienteID", CliID);
+
+        SqlDataReader reader = cmd.ExecuteReader();
+
+        Cliente objCliente = new Cliente();
+        while (reader.Read())
+
+        {
+            objCliente.ClienteID = Convert.ToInt32(reader["ClienteID"]);
+            objCliente.Nome = Convert.ToString(reader["Nome"]);
+            objCliente.Endereco = Convert.ToString(reader["Endereco"]);
+            objCliente.Email = Convert.ToString(reader["Email"]);
+        }
+        con.Close();
+        return View(objCliente);
+    }
+
+    [HttpPost]
+    public ActionResult EditarCliente(Cliente cliente)
+    {
+        string query = "UPDATE Clientes SET Nome=@Nome, Endereco=@Endereco, Email=@Email ,WHERE ClienteID= @ClienteID";
+        string constr = ConfigurationManager.ConnectionStrings["SqlConexao"].ConnectionString;
+        using (SqlConnection con = new SqlConnection(constr))
+        { using (SqlCommand cmd = new SqlCommand(query))
+
+                cmd.Parameters.AddWithValue("@ClienteID", cliente.ClienteID);
+            cmd.Parameters.AddWithValue("@Nome", cliente.Nome);
+            cmd.Parameters.AddWithValue("@Endereco", cliente.Endereco);
+            cmd.Parameters.AddWithValue("@Email", cliente.Email);
+            cmd.Connection = con;
+            con.Open();
+            cmd.ExecuteNonQuery();
+            con.Close();
+
+        }
+    }
+    return RedirectToAction("Index");
+
+
+    public ActionResult DeleteCliente(int? CliID)
+    {
+        string query = "DELETE *FROM Clientes WHERE ClienteID=@ClienteID";
+        string constr = ConfigurationManager.ConnectionStrings["SqlConexao"].ConnectionString;
+        using (SqlConnection con = new SqlConnection(constr))
+        {
+            using (SqlCommand cmd = new SqlCommand(query))
+            {
+                cmd.Parameters.AddWithValue("@ClienteID", CliID);
+                cmd.Connection = con;
+                con.Open();
+                cmd.ExecuteNonQuery();
+                con.Close();
+            }
+        }
+        return RedirectToAction("Index");
+    } 
+}
+
+
+Layout
+<!DOCTYPE html>
+<connectionStrings>
+    <add name ="SqlConexao"
+         connectionString="Data Source=DESKTOP-109VJGV\SQLSERVER;Initial Catalog=ContatoDB; Integrated Security=True"
+         providerName="Sytem.Data.SqlClient"/>
+        </connectionStrings> 
+ @model ProjetoMVCCrudADO.Models.ClassClientes
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+<h2>Cadastrar Cliente</h2>
+
+@using (Html.BeginForm("CadastrarCliente", "Cliente",FormMethod.Post))
+{
+    if (ViewBag.Cadastro != null)
+    {
+        <div style=" color:red">
+            @ViewBag.Cadastro
+        </div>
+
+    }
+    else
+    {
+        @Html.LabelFor(model =>model.Nome)
+        @Html.EditorFor(model =>model.Nome)
+        <br />
+        @Html.LabelFor(model =>model.Email)
+        @Html.EditorFor(model =>model.Email)
+        <br />
+        @Html.LabelFor(model =>model.Endereco)
+       @Html.EditorFOR(model =>model.Endereco)
+       <br />
+        @Html.LabelFor(model =>model.Senha)
+        @Html.EditorFor(model =>model.Senha)
+        <br/>
+        <input type="submit" value="Cadastrar" class="btn btn-default" />
+    }  
+
+}
+
+ // Index
+
+@model IEnumerabl<CrudADoNETaspnetMVC.Models.Cliente>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h2> Lista de Clientes</h2>
+<p>
+    @Html.ActionLink("Cadastrar Novo", "NovoCliente")
+</p>
+<table class="table">
+
+    <tr>
+        <th style="width:100px">ClienteID</th>
+        <th style="width:150px">NOME</th>
+        <th style="width:150px">Endereco</th>
+        <th style="width:150px">Email</th>
+        <th style="width:150px"></th>
+    </tr>
+    @foreach (var cliente in Model)
+    {
+        <tr>
+            <td class="ClienteID">
+                <span>@cliente.ClienteID</span>
+            </td>
+            <td class="Nome">
+                <span>@cliente.Nome</span>
+                <input type="text" value="@cliente.Nome" style="display:none"/>
+            </td>
+
+            <td class="Endereco">
+                <span>@cliente.Nome</span>
+                <input type="text" value="@cliente.Endereco" style="display:none" />
+            </td>
+            <td class="Nome">
+                <span>@cliente.Email</span>
+                <input type="text" value="@cliente.Email" style="display:none" />
+            </td>
+            <td>
+                @Html.ActionLink("Atualizar", "UpdateCliente","Home", new {cliID=cliente.ClienteID},null)
+                @Html.ActionLink("Deletar", "DeleteCliente","Home", new {cliID=cliente.ClienteID},null)
+            </td>
+        </tr>
+    }
+
+</table>
+@model CrudADoNETaspnetMVC.Models.Cliente
+@{
+    ViewBag.Title = "novoCLiente";
+    Layout = "~/views/shared/_Layout.cshtml"
+}
+<h2>NovoCliente</h2>
+@using (Html.BeginForm("InserirCliente", "home", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+    <div class="form-horizontal">
+        <hr />
+        @Html.ValidationSummary(true,"", new{@class= "text-danger"})
+        <div class="form-group">
+            @Html.Labelfor(model=>model.Nome,htmlAttributes:new{@class="control-laber col-md-2"})
+            <div class="col-md-10">
+                @Html.EditorFor(model=>model.Nome,new{htmlAttributes=new}{@class="form-control"})
+                @Html.ValidationMessageFor(model=>model.Nome,"",new{@class="text-danger"})
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.Labelfor(model=>model.Email,htmlAttributes:new{@class="control-laber col-md-2"})
+            <div class="col-md-10">
+                @Html.EditorFor(model=>model.Email,new{htmlAttributes=new}{@class="form-control"})
+                @Html.ValidationMessageFor(model=>model.Nome,"",new{@class="text-danger"})
+            </div>
+  </div>
+
+        <div class="form-group">
+            @Html.Labelfor(model=>model.Endereco,htmlAttributes:new{@class="control-laber col-md-2"})
+            <div class="col-md-10">
+                @Html.EditorFor(model=>model.Endereco,new{htmlAttributes=new}{@class="form-control"})
+                @Html.ValidationMessageFor(model=>model.Nome,"",new{@class="text-danger"})
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Cadastrar" class="btn btn-default" />
+            </div>
+        </div>
+    </div>
+ } 
+@section Scripts {
+    @Script.Render("~/bundles/jqueryval")
+}
+
+@model CrudADoNETaspnetMVC.Models.Cliente
+@{
+    ViewBag.Title = "UpdateCliente";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+<h2>Atualizar Cliente</h2>
+@using(Html.BeginForm("EditarCliente","Home",FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+    <div class="form-horizontal">
+        <hr/>
+        @Html.ValidationSummary(true,"", new{@class= "text-danger"})
+        @Html.HiddenFor(model=>model.ClienteID)
+        <div class="form-group">
+            @Html.Labelfor(model=>model.Nome,htmlAttributes:new{@class="control-laber col-md-2"})
+            <div class="col-md-10">
+                @Html.EditorFor(model=>model.Nome,new{htmlAttributes=new}{@class="form-control"})
+                @Html.ValidationMessageFor(model=>model.Nome,"",new{@class="text-danger"})
+
+            </div>
+
+        </div>
+        @Html.ValidationSummary(true,"", new{@class= "text-danger"})
+        @Html.HiddenFor(model=>model.ClienteID)
+        <div class="form-group">
+            @Html.Labelfor(model=>model.Email,htmlAttributes:new{@class="control-laber col-md-2"})
+            <div class="col-md-10">
+                @Html.EditorFor(model=>model.Email,new{htmlAttributes=new}{@class="form-control"})
+                @Html.ValidationMessageFor(model=>model.Email,"",new{@class="text-danger"})
+
+            </div>
+
+        </div>
+        @Html.ValidationSummary(true,"", new{@class= "text-danger"})
+        @Html.HiddenFor(model=>model.ClienteID)
+        <div class="form-group">
+            @Html.Labelfor(model=>model.Endereco,htmlAttributes:new{@class="control-laber col-md-2"})
+            <div class="col-md-10">
+                @Html.EditorFor(model=>model.Endereco,new{htmlAttributes=new}{@class="form-control"})
+                @Html.ValidationMessageFor(model=>model.Endereco,"",new{@class="text-danger"})
+
+            </div>
+
+        </div>
+
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Cadastrar" class="btn btn-default" />
+            </div>
+        </div>
+    </div>
+}
+
+
+
+
